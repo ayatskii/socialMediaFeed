@@ -1,23 +1,15 @@
-package main
+package post
 
 import (
 	"fmt"
+	"socialmediafeed/internal/user"
 	"time"
 )
 
-type Post struct {
-	ID        string    `json:"id"`
-	Author    *User     `json:"author"`
-	Content   string    `json:"content"`
-	MediaURL  string    `json:"mediaURL,omitempty"`
-	CreatedAt time.Time `json:"createdAt"`
-	Likes     int       `json:"likes"`
-	Comments  []string  `json:"comments"`
-}
 
 type PostBuilder interface {
 	SetID(id string) PostBuilder
-	SetAuthor(user *User) PostBuilder
+	SetAuthor(user *user.User) PostBuilder
 	SetContent(content string) PostBuilder
 	SetMedia(url string) PostBuilder
 	Build() *Post
@@ -42,7 +34,7 @@ func (c *ConcretePostBuilder) SetID(id string) PostBuilder {
 	return c
 }
 
-func (c *ConcretePostBuilder) SetAuthor(user *User) PostBuilder {
+func (c *ConcretePostBuilder) SetAuthor(user *user.User) PostBuilder {
 	c.post.Author = user
 	return c
 }

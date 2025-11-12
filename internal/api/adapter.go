@@ -1,6 +1,8 @@
-package main
+package api
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type FeedItem struct {
 	Type    string `json:"type"`
@@ -12,16 +14,6 @@ type FeedItem struct {
 
 type FeedItemTarget interface {
 	ToFeedItem() FeedItem
-}
-
-func (p *Post) ToFeedItem() FeedItem {
-	return FeedItem{
-		Type:    "Internal",
-		Author:  fmt.Sprintf("%s (%s)", p.Author.Name, p.Author.Role),
-		Content: p.Content,
-		Metrics: fmt.Sprintf("Likes: %d, Comments: %d", p.Likes, len(p.Comments)),
-		PostID:  p.ID,
-	}
 }
 
 type ExternalPost struct {

@@ -5,14 +5,17 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"socialmediafeed/internal/api"
+	"socialmediafeed/internal/post"
+	"socialmediafeed/internal/user"
 	"strings"
 	"sync"
 	"time"
 )
 
 var (
-	users = make(map[string]*User)
-	posts = make(map[string]*Post)
+	users = make(map[string]*user.User)
+	posts = make(map[string]*post.Post)
 	mu    sync.RWMutex
 )
 
@@ -49,7 +52,7 @@ func HandleUserCreation(w http.ResponseWriter, r *http.Request) {
 	}
 
 	userID := fmt.Sprintf("u-%d", time.Now().UnixNano())
-	user := NewUserFactory(userID, req.Name, req.Role)
+	user := user.NewUserFactory(userID, req.Name, req.Role)
 
 	mu.Lock()
 	users[userID] = user
@@ -84,7 +87,7 @@ func HandlePostCreation(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	post := NewPostBuilder().
+	post := post.NewPostBuilder().
 		SetAuthor(author).
 		SetContent(req.Content).
 		SetMedia(req.MediaURL).
@@ -128,25 +131,6 @@ func HandlePostInteraction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var strategy InteractionStrategy
-	action := strings.ToLower(req.Action)
-
-	switch action {
-	case "like":
-		strategy = &LikeStrategy{}
-	case "dislike":
-		strategy = &DislikeStrategy{}
-	case "comment":
-		strategy = &CommentStrategy{}
-	default:
-		mu.Unlock()
-		respondError(w, http.StatusBadRequest, "Invalid interaction action. Use 'like', 'dislike', or 'comment'.")
-		return
-	}
-
-	Interact(post, strategy, req.Data)
-	mu.Unlock()
-
 	respondJSON(w, http.StatusOK, map[string]interface{}{
 		"message":   fmt.Sprintf("%s action successful on post %s", req.Action, postID),
 		"new_likes": post.Likes,
@@ -161,20 +145,20 @@ func HandleFeed(w http.ResponseWriter, r *http.Request) {
 	}
 
 	mu.RLock()
-	postSlice := make([]*Post, 0, len(posts))
+	postSlice := make([]*post.Post, 0, len(posts))
 	for _, p := range posts {
 		postSlice = append(postSlice, p)
 	}
 	mu.RUnlock()
 
-	externalData := &ExternalPost{
+	externalData := &api.ExternalPost{
 		Handle:       "qwerty",
 		TweetContent: "Design patterns simplify complex systems, especially in Go!",
 		ViewCount:    999,
 	}
-	externalAdapter := &ExternalPostAdapter{ExternalPost: externalData}
+	externalAdapter := &api.ExternalPostAdapter{ExternalPost: externalData}
 
-	feedItems := make([]FeedItem, 0, len(postSlice)+1)
+	feedItems := make([]api.FeedItem, 0, len(postSlice)+1)
 
 	for _, p := range postSlice {
 		feedItems = append(feedItems, p.ToFeedItem())
@@ -187,13 +171,13 @@ func HandleFeed(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	mu.Lock()
-	adminUser := NewUserFactory("u1", "AdminUser", "Admin")
-	standardUser := NewUserFactory("u2", "StandardUser", "Standard")
+	adminUser := user.NewUserFactory("u1", "AdminUser", "Admin")
+	standardUser := user.NewUserFactory("u2", "StandardUser", "Standard")
 	users[adminUser.ID] = adminUser
 	users[standardUser.ID] = standardUser
 
-	post1 := NewPostBuilder().SetAuthor(adminUser).SetContent("First post built using the Builder pattern!").Build()
-	post2 := NewPostBuilder().SetAuthor(standardUser).SetContent("Another post with a media link.").SetMedia("http://example.com/video.mp4").Build()
+	post1 := post.NewPostBuilder().SetAuthor(adminUser).SetContent("First post built using the Builder pattern!").Build()
+	post2 := post.NewPostBuilder().SetAuthor(standardUser).SetContent("Another post with a media link.").SetMedia("http://example.com/video.mp4").Build()
 	posts[post1.ID] = post1
 	posts[post2.ID] = post2
 	mu.Unlock()
