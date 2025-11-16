@@ -2,19 +2,9 @@ package api
 
 import (
 	"fmt"
+
+	"socialmediafeed/pkg/types"
 )
-
-type FeedItem struct {
-	Type    string `json:"type"`
-	Author  string `json:"author"`
-	Content string `json:"content"`
-	Metrics string `json:"metrics"`
-	PostID  string `json:"postId,omitempty"`
-}
-
-type FeedItemTarget interface {
-	ToFeedItem() FeedItem
-}
 
 type ExternalPost struct {
 	Handle       string `json:"handle"`
@@ -26,8 +16,8 @@ type ExternalPostAdapter struct {
 	ExternalPost *ExternalPost
 }
 
-func (a *ExternalPostAdapter) ToFeedItem() FeedItem {
-	return FeedItem{
+func (a *ExternalPostAdapter) ToFeedItem() types.FeedItem {
+	return types.FeedItem{
 		Type:    "External",
 		Author:  fmt.Sprintf("@%s (External Source)", a.ExternalPost.Handle),
 		Content: a.ExternalPost.TweetContent,

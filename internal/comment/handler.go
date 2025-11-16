@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	response "socialmediafeed/pkg/responce"
 	"strconv"
 	"text/template"
 )
@@ -40,24 +41,18 @@ func (h *Handler) CreateComment(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid request payload"})
+		response.BadRequest(w, "Invalid request payload")
 		return
 	}
 
 	if req.Content == "" {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Content is required"})
+		response.BadRequest(w, "Content is required")
 		return
 	}
 
 	userID := getUserIDFromContext(r.Context())
 	if userID == 0 {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusUnauthorized)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Unauthorized"})
+		response.Unauthorized(w, "Unauthorized")
 		return
 	}
 
@@ -71,54 +66,41 @@ func (h *Handler) CreateComment(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		response.BadRequest(w, err.Error())
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(comment)
+	response.Created(w, comment)
 }
 
 func (h *Handler) GetCommentByID(w http.ResponseWriter, r *http.Request) {
 	idStr := r.PathValue("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid comment ID"})
+		response.BadRequest(w, "Invalid comment ID")
 		return
 	}
 
 	comment, err := h.service.GetCommentByID(r.Context(), id)
 	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusNotFound)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Comment not found"})
+		response.NotFound(w, "Comment not found")
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(comment)
+	response.JSON(w, http.StatusOK, comment)
 }
 
 func (h *Handler) UpdateComment(w http.ResponseWriter, r *http.Request) {
 	idStr := r.PathValue("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid comment ID"})
+		response.BadRequest(w, "Invalid comment ID")
 		return
 	}
 
 	userID := getUserIDFromContext(r.Context())
 	if userID == 0 {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusUnauthorized)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Unauthorized"})
+		response.Unauthorized(w, "Unauthorized")
 		return
 	}
 
@@ -127,127 +109,99 @@ func (h *Handler) UpdateComment(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid request payload"})
+		response.BadRequest(w, "Invalid request payload")
 		return
 	}
 
 	userRole := getUserRoleFromContext(r.Context())
 	comment, err := h.service.UpdateComment(r.Context(), id, userID, req.Content, userRole)
 	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		response.BadRequest(w, err.Error())
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(comment)
+	response.JSON(w, http.StatusOK, comment)
 }
 
 func (h *Handler) DeleteComment(w http.ResponseWriter, r *http.Request) {
 	idStr := r.PathValue("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid comment ID"})
+		response.BadRequest(w, "Invalid comment ID")
 		return
 	}
 
 	userID := getUserIDFromContext(r.Context())
 	if userID == 0 {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusUnauthorized)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Unauthorized"})
+		response.Unauthorized(w, "Unauthorized")
 		return
 	}
 
 	userRole := getUserRoleFromContext(r.Context())
 	if err := h.service.DeleteComment(r.Context(), id, userID, userRole); err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusForbidden)
-		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		response.Forbidden(w, err.Error())
 		return
 	}
 
-	w.WriteHeader(http.StatusNoContent)
+	response.NoContent(w)
 }
 
 func (h *Handler) GetPostComments(w http.ResponseWriter, r *http.Request) {
 	postIDStr := r.PathValue("postId")
 	postID, err := strconv.ParseInt(postIDStr, 10, 64)
 	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid post ID"})
+		response.BadRequest(w, "Invalid post ID")
 		return
 	}
 
 	comments, err := h.service.GetCommentsByPostID(r.Context(), postID)
 	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		response.InternalServerError(w, err.Error())
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(comments)
+	response.JSON(w, http.StatusOK, comments)
 }
 
 func (h *Handler) GetCommentTree(w http.ResponseWriter, r *http.Request) {
 	postIDStr := r.PathValue("postId")
 	postID, err := strconv.ParseInt(postIDStr, 10, 64)
 	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid post ID"})
+		response.BadRequest(w, "Invalid post ID")
 		return
 	}
 
 	comments, err := h.service.GetCommentTree(r.Context(), postID)
 	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		response.InternalServerError(w, err.Error())
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(comments)
+	response.JSON(w, http.StatusOK, comments)
 }
 
 func (h *Handler) GetCommentCount(w http.ResponseWriter, r *http.Request) {
 	postIDStr := r.PathValue("postId")
 	postID, err := strconv.ParseInt(postIDStr, 10, 64)
 	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid post ID"})
+		response.BadRequest(w, "Invalid post ID")
 		return
 	}
 
 	count, err := h.service.GetCommentCount(r.Context(), postID)
 	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		response.InternalServerError(w, err.Error())
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]int{"count": count})
+	response.JSON(w, http.StatusOK, map[string]int{"count": count})
 }
 
 func (h *Handler) GetUserComments(w http.ResponseWriter, r *http.Request) {
 	userIDStr := r.PathValue("userId")
 	userID, err := strconv.ParseInt(userIDStr, 10, 64)
 	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid user ID"})
+		response.BadRequest(w, "Invalid user ID")
 		return
 	}
 
@@ -265,14 +219,11 @@ func (h *Handler) GetUserComments(w http.ResponseWriter, r *http.Request) {
 
 	comments, err := h.service.GetUserComments(r.Context(), userID, limit, offset)
 	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		response.InternalServerError(w, err.Error())
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(comments)
+	response.JSON(w, http.StatusOK, comments)
 }
 
 func getUserIDFromContext(ctx context.Context) int64 {

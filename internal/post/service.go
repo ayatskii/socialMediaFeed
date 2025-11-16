@@ -166,18 +166,15 @@ func (s *Service) LikePost(ctx context.Context, userID, postID int64) error {
 		if reactionType == "like" {
 			return fmt.Errorf("you have already liked this post")
 		}
-		// User previously disliked, update to like
 		if err := s.repo.UpdateReaction(ctx, userID, postID, "dislike", "like"); err != nil {
 			return err
 		}
-		// Decrement dislikes and increment likes
 		if err := s.repo.DecrementDislikes(ctx, postID); err != nil {
 			return err
 		}
 		return s.repo.IncrementLikes(ctx, postID)
 	}
 
-	// New reaction
 	if err := s.repo.AddReaction(ctx, userID, postID, "like"); err != nil {
 		return err
 	}
@@ -197,18 +194,15 @@ func (s *Service) DislikePost(ctx context.Context, userID, postID int64) error {
 		if reactionType == "dislike" {
 			return fmt.Errorf("you have already disliked this post")
 		}
-		// User previously liked, update to dislike
 		if err := s.repo.UpdateReaction(ctx, userID, postID, "like", "dislike"); err != nil {
 			return err
 		}
-		// Decrement likes and increment dislikes
 		if err := s.repo.DecrementLikes(ctx, postID); err != nil {
 			return err
 		}
 		return s.repo.IncrementDislikes(ctx, postID)
 	}
 
-	// New reaction
 	if err := s.repo.AddReaction(ctx, userID, postID, "dislike"); err != nil {
 		return err
 	}

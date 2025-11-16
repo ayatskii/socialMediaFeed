@@ -2,8 +2,8 @@ package notification
 
 import (
 	"context"
-	"encoding/json"
 	"net/http"
+	response "socialmediafeed/pkg/responce"
 	"strconv"
 	"text/template"
 )
@@ -33,9 +33,7 @@ func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
 func (h *Handler) GetNotifications(w http.ResponseWriter, r *http.Request) {
 	userID := getUserIDFromContext(r.Context())
 	if userID == 0 {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusUnauthorized)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Unauthorized"})
+		response.Unauthorized(w, "Unauthorized")
 		return
 	}
 
@@ -53,133 +51,102 @@ func (h *Handler) GetNotifications(w http.ResponseWriter, r *http.Request) {
 
 	notifications, err := h.service.GetUserNotifications(r.Context(), userID, limit, offset)
 	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		response.InternalServerError(w, err.Error())
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(notifications)
+	response.JSON(w, http.StatusOK, notifications)
 }
 
 func (h *Handler) GetUnreadNotifications(w http.ResponseWriter, r *http.Request) {
 	userID := getUserIDFromContext(r.Context())
 	if userID == 0 {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusUnauthorized)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Unauthorized"})
+		response.Unauthorized(w, "Unauthorized")
 		return
 	}
 
 	notifications, err := h.service.GetUnreadNotifications(r.Context(), userID)
 	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		response.InternalServerError(w, err.Error())
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(notifications)
+	response.JSON(w, http.StatusOK, notifications)
 }
 
 func (h *Handler) GetUnreadCount(w http.ResponseWriter, r *http.Request) {
 	userID := getUserIDFromContext(r.Context())
 	if userID == 0 {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusUnauthorized)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Unauthorized"})
+		response.Unauthorized(w, "Unauthorized")
 		return
 	}
 
 	count, err := h.service.GetUnreadCount(r.Context(), userID)
 	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		response.InternalServerError(w, err.Error())
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]int{"count": count})
+	response.JSON(w, http.StatusOK, map[string]int{"count": count})
 }
 
 func (h *Handler) MarkAsRead(w http.ResponseWriter, r *http.Request) {
 	idStr := r.PathValue("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid notification ID"})
+		response.BadRequest(w, "Invalid notification ID")
 		return
 	}
 
 	userID := getUserIDFromContext(r.Context())
 	if userID == 0 {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusUnauthorized)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Unauthorized"})
+		response.Unauthorized(w, "Unauthorized")
 		return
 	}
 
 	if err := h.service.MarkAsRead(r.Context(), id, userID); err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		response.BadRequest(w, err.Error())
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]string{"message": "Notification marked as read"})
+	response.Success(w, "Notification marked as read")
 }
 
 func (h *Handler) MarkAllAsRead(w http.ResponseWriter, r *http.Request) {
 	userID := getUserIDFromContext(r.Context())
 	if userID == 0 {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusUnauthorized)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Unauthorized"})
+		response.Unauthorized(w, "Unauthorized")
 		return
 	}
 
 	if err := h.service.MarkAllAsRead(r.Context(), userID); err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		response.InternalServerError(w, err.Error())
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]string{"message": "All notifications marked as read"})
+	response.Success(w, "All notifications marked as read")
 }
 
 func (h *Handler) DeleteNotification(w http.ResponseWriter, r *http.Request) {
 	idStr := r.PathValue("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid notification ID"})
+		response.BadRequest(w, "Invalid notification ID")
 		return
 	}
 
 	userID := getUserIDFromContext(r.Context())
 	if userID == 0 {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusUnauthorized)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Unauthorized"})
+		response.Unauthorized(w, "Unauthorized")
 		return
 	}
 
 	if err := h.service.DeleteNotification(r.Context(), id, userID); err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusForbidden)
-		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		response.Forbidden(w, err.Error())
 		return
 	}
 
-	w.WriteHeader(http.StatusNoContent)
+	response.NoContent(w)
 }
 
 func getUserIDFromContext(ctx context.Context) int64 {

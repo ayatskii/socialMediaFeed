@@ -34,13 +34,11 @@ func NewHandler(postService *post.Service, userService *user.Service) *Handler {
 		relPath, _ := filepath.Rel("web/templates", file)
 		pathName := filepath.ToSlash(relPath)
 
-		// Read the file content
 		content, err := os.ReadFile(file)
 		if err != nil {
 			panic(err)
 		}
 
-		// Parse the content with the path-based name
 		_, err = templates.New(pathName).Parse(string(content))
 		if err != nil {
 			panic(err)
@@ -57,13 +55,10 @@ func NewHandler(postService *post.Service, userService *user.Service) *Handler {
 func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
 	authMiddleware := NewAuthMiddleware(h.userService)
 
-	// Register web page routes first (more specific routes should be registered first)
-	// Public routes that should always be accessible
 	mux.HandleFunc("GET /register", h.RegisterPage)
 	mux.HandleFunc("GET /login", h.LoginPage)
 	mux.HandleFunc("POST /logout", h.Logout)
 
-	// Other web page routes
 	mux.HandleFunc("GET /", authMiddleware.OptionalAuth(h.HomePage))
 	mux.HandleFunc("GET /post/{id}", authMiddleware.OptionalAuth(h.PostPage))
 	mux.HandleFunc("GET /profile/{id}", authMiddleware.OptionalAuth(h.ProfilePage))
@@ -71,12 +66,10 @@ func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /create-post", authMiddleware.RequireAuth(h.CreatePostPage))
 	mux.HandleFunc("POST /create-post", authMiddleware.RequireAuth(h.HandleCreatePost))
 
-	// Serve static files with method-specific handlers to avoid conflicts
 	staticDir := http.Dir("web/static")
 	fileServer := http.FileServer(staticDir)
 	staticHandler := http.StripPrefix("/static/", fileServer)
 
-	// Register static files with GET and HEAD methods only
 	mux.HandleFunc("GET /static/", func(w http.ResponseWriter, r *http.Request) {
 		staticHandler.ServeHTTP(w, r)
 	})
@@ -86,7 +79,6 @@ func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
 }
 
 func (h *Handler) HomePage(w http.ResponseWriter, r *http.Request) {
-	// Get posts for the feed
 	ctx := r.Context()
 	posts, err := h.postService.GetFeed(ctx, "date", 20, 0)
 	if err != nil {
@@ -99,7 +91,6 @@ func (h *Handler) HomePage(w http.ResponseWriter, r *http.Request) {
 		"Posts": posts,
 	}
 
-	// Add current user if authenticated
 	if userObj, ok := GetUserFromContext(ctx); ok {
 		data["CurrentUser"] = EncodeUserForTemplate(userObj)
 	}
@@ -129,7 +120,6 @@ func (h *Handler) PostPage(w http.ResponseWriter, r *http.Request) {
 		"Post":  post,
 	}
 
-	// Add current user if authenticated
 	if userObj, ok := GetUserFromContext(ctx); ok {
 		data["CurrentUser"] = EncodeUserForTemplate(userObj)
 	}
@@ -166,7 +156,6 @@ func (h *Handler) ProfilePage(w http.ResponseWriter, r *http.Request) {
 		"Posts": posts,
 	}
 
-	// Add current user if authenticated
 	if userObj, ok := GetUserFromContext(ctx); ok {
 		data["CurrentUser"] = EncodeUserForTemplate(userObj)
 		data["IsOwnProfile"] = userObj.ID == id
@@ -247,7 +236,6 @@ func (h *Handler) CreatePostPage(w http.ResponseWriter, r *http.Request) {
 		"Error": r.URL.Query().Get("error"),
 	}
 
-	// Add current user if authenticated
 	if userObj, ok := GetUserFromContext(ctx); ok {
 		data["CurrentUser"] = EncodeUserForTemplate(userObj)
 	}

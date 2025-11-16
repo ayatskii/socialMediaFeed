@@ -13,6 +13,7 @@ import (
 
 	_ "github.com/mattn/go-sqlite3"
 
+	"socialmediafeed/internal/api"
 	"socialmediafeed/internal/comment"
 	"socialmediafeed/internal/hashtag"
 	"socialmediafeed/internal/infrastructure/database"
@@ -20,7 +21,6 @@ import (
 	"socialmediafeed/internal/notification"
 	"socialmediafeed/internal/post"
 	"socialmediafeed/internal/user"
-	"socialmediafeed/internal/web"
 	"socialmediafeed/pkg/logger"
 )
 
@@ -77,45 +77,19 @@ func main() {
 
 	logger.Info("Services initialized")
 
-	userHandler := user.NewHandler(userService)
-	postHandler := post.NewHandler(postService)
-	commentHandler := comment.NewHandler(commentService)
-	hashtagHandler := hashtag.NewHandler(hashtagService)
-	notificationHandler := notification.NewHandler(notificationService)
-	webHandler := web.NewHandler(postService, userService)
-	authMiddleware := web.NewAuthMiddleware(userService)
+	apiFacade := api.NewFacade(
+		userService,
+		postService,
+		commentService,
+		hashtagService,
+		notificationService,
+	)
 
-	logger.Info("Handlers initialized")
+	logger.Info("API facade initialized")
 
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("GET /health", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		 	w.Write([]byte(`{"status":"ok"}`))
-	})
-
-	userHandler.RegisterRoutes(mux)
-	
-	// Register post routes with optional auth for like/dislike
-	mux.HandleFunc("POST /api/posts", postHandler.CreatePost)
-	mux.HandleFunc("GET /api/posts/{id}", postHandler.GetPostByID)
-	mux.HandleFunc("PUT /api/posts/{id}", postHandler.UpdatePost)
-	mux.HandleFunc("DELETE /api/posts/{id}", postHandler.DeletePost)
-	mux.HandleFunc("GET /api/posts", postHandler.GetAllPosts)
-	mux.HandleFunc("GET /api/feed", postHandler.GetFeed)
-	mux.HandleFunc("GET /api/trending", postHandler.GetTrending)
-	mux.HandleFunc("GET /api/users/{authorId}/posts", postHandler.GetPostsByAuthor)
-	mux.HandleFunc("GET /api/hashtags/{tag}/posts", postHandler.GetPostsByHashtag)
-	mux.HandleFunc("POST /api/posts/{id}/like", authMiddleware.OptionalAuth(postHandler.LikePost))
-	mux.HandleFunc("POST /api/posts/{id}/dislike", authMiddleware.OptionalAuth(postHandler.DislikePost))
-	mux.HandleFunc("POST /api/posts/{id}/filters", postHandler.ApplyFilters)
-	
-	commentHandler.RegisterRoutes(mux)
-	hashtagHandler.RegisterRoutes(mux)
-	notificationHandler.RegisterRoutes(mux)
-
-	webHandler.RegisterRoutes(mux)
+	apiFacade.RegisterRoutes(mux)
 
 	logger.Info("Routes registered")
 

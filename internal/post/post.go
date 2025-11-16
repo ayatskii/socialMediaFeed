@@ -3,7 +3,7 @@ package post
 import (
 	"context"
 	"fmt"
-	"socialmediafeed/internal/api"
+	"socialmediafeed/pkg/types"
 	"strings"
 	"time"
 )
@@ -80,12 +80,12 @@ func (p *Post) Clone() *Post {
 	return &clone
 }
 
-func (p *Post) ToFeedItem(ctx context.Context) api.FeedItem {
-	return api.FeedItem{
+func (p *Post) ToFeedItem(ctx context.Context) types.FeedItem {
+	return types.FeedItem{
 		Type:    "Internal",
 		Author:  fmt.Sprintf("%d", p.AuthorID),
 		Content: p.Content,
 		Metrics: fmt.Sprintf("Likes: %d, Dislikes: %d", p.Likes, p.Dislikes),
-		PostID:  string(p.ID),
+		PostID:  fmt.Sprintf("%d", p.ID),
 	}
 }

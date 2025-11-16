@@ -1,8 +1,8 @@
 package hashtag
 
 import (
-	"encoding/json"
 	"net/http"
+	"socialmediafeed/pkg/responce"
 	"strconv"
 	"text/template"
 )
@@ -31,14 +31,11 @@ func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
 func (h *Handler) GetAllHashtags(w http.ResponseWriter, r *http.Request) {
 	hashtags, err := h.service.GetAllHashtags(r.Context())
 	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		response.InternalServerError(w, err.Error())
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(hashtags)
+	response.JSON(w, http.StatusOK, hashtags)
 }
 
 func (h *Handler) GetTrending(w http.ResponseWriter, r *http.Request) {
@@ -50,14 +47,11 @@ func (h *Handler) GetTrending(w http.ResponseWriter, r *http.Request) {
 
 	hashtags, err := h.service.GetTrendingHashtags(r.Context(), limit)
 	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		response.InternalServerError(w, err.Error())
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(hashtags)
+	response.JSON(w, http.StatusOK, hashtags)
 }
 
 func (h *Handler) GetPopular(w http.ResponseWriter, r *http.Request) {
@@ -69,22 +63,17 @@ func (h *Handler) GetPopular(w http.ResponseWriter, r *http.Request) {
 
 	hashtags, err := h.service.GetPopularHashtags(r.Context(), limit)
 	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		response.InternalServerError(w, err.Error())
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(hashtags)
+	response.JSON(w, http.StatusOK, hashtags)
 }
 
 func (h *Handler) SearchHashtags(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query().Get("q")
 	if query == "" {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Query parameter 'q' is required"})
+		response.BadRequest(w, "Query parameter 'q' is required")
 		return
 	}
 
@@ -96,33 +85,25 @@ func (h *Handler) SearchHashtags(w http.ResponseWriter, r *http.Request) {
 
 	hashtags, err := h.service.SearchHashtags(r.Context(), query, limit)
 	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		response.InternalServerError(w, err.Error())
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(hashtags)
+	response.JSON(w, http.StatusOK, hashtags)
 }
 
 func (h *Handler) GetHashtagByTag(w http.ResponseWriter, r *http.Request) {
 	tag := r.PathValue("tag")
 	if tag == "" {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Tag is required"})
+		response.BadRequest(w, "Tag is required")
 		return
 	}
 
 	hashtag, err := h.service.GetHashtagByTag(r.Context(), tag)
 	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusNotFound)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Hashtag not found"})
+		response.NotFound(w, "Hashtag not found")
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(hashtag)
+	response.JSON(w, http.StatusOK, hashtag)
 }

@@ -698,3 +698,67 @@
 2025-11-16 21:43:40 [[32mINFO[0m] [logger.go:176] GET / - [32m200[0m - 504.2µs
 2025-11-16 21:43:42 [[32mINFO[0m] [logger.go:199] Server shutting down...
 2025-11-16 21:43:42 [[32mINFO[0m] [logger.go:199] Server stopped
+2025-11-16 21:47:56 [[32mINFO[0m] [logger.go:199] Application starting...
+2025-11-16 21:47:56 [[32mINFO[0m] [logger.go:199] Database connection established
+2025-11-16 21:47:56 [[32mINFO[0m] [logger.go:199] Database migrations completed
+2025-11-16 21:47:56 [[32mINFO[0m] [logger.go:199] Repositories initialized
+2025-11-16 21:47:56 [[32mINFO[0m] [logger.go:199] Services initialized
+2025-11-16 21:47:56 [[32mINFO[0m] [logger.go:199] Handlers initialized
+2025-11-16 21:47:56 [[32mINFO[0m] [logger.go:199] Routes registered
+2025-11-16 21:47:56 [[32mINFO[0m] [logger.go:199] Server started successfully on http://localhost:8080
+2025-11-16 21:47:56 [[32mINFO[0m] [logger.go:199] Server starting on port 8080
+2025-11-16 21:48:01 [[32mINFO[0m] [logger.go:176] GET /login - [32m200[0m - 558.2µs
+2025-11-16 21:48:01 [[32mINFO[0m] [logger.go:176] GET /static/css/style.css - [32m200[0m - 53.8169ms
+2025-11-16 21:48:01 [[32mINFO[0m] [logger.go:176] GET /static/js/main.js - [32m200[0m - 51.8867ms
+2025-11-16 21:48:01 [[32mINFO[0m] [logger.go:176] GET /favicon.ico - [32m200[0m - 1.4264ms
+2025-11-16 21:48:06 [[32mINFO[0m] [logger.go:176] GET /login - [32m200[0m - 0s
+2025-11-16 21:48:06 [[32mINFO[0m] [logger.go:176] GET /static/css/style.css - [32m200[0m - 531µs
+2025-11-16 21:48:06 [[32mINFO[0m] [logger.go:176] GET /static/js/main.js - [33m304[0m - 0s
+2025-11-16 21:48:07 [[32mINFO[0m] [logger.go:176] POST /api/users/login - [32m200[0m - 55.8521ms
+2025-11-16 21:48:07 [[32mINFO[0m] [logger.go:176] GET / - [32m200[0m - 507.3µs
+2025-11-16 21:48:09 [[32mINFO[0m] [logger.go:176] POST /api/posts/2/like - [32m200[0m - 7.8609ms
+2025-11-16 21:48:10 [[32mINFO[0m] [logger.go:176] POST /api/posts/2/dislike - [32m200[0m - 8.0356ms
+2025-11-16 21:48:10 [[32mINFO[0m] [logger.go:176] GET / - [32m200[0m - 1.0223ms
+2025-11-16 21:48:11 [[32mINFO[0m] [logger.go:176] GET /profile/1 - [32m200[0m - 633.1µs
+2025-11-16 21:48:12 [[32mINFO[0m] [logger.go:176] POST /logout - [33m303[0m - 0s
+2025-11-16 21:48:12 [[32mINFO[0m] [logger.go:176] GET / - [32m200[0m - 1.2292ms
+2025-11-16 21:48:14 [[32mINFO[0m] [logger.go:199] Server shutting down...
+2025-11-16 21:48:14 [[32mINFO[0m] [logger.go:199] Server stopped
+2025-11-16 21:50:24 [[32mINFO[0m] [logger.go:199] Application starting...
+2025-11-16 21:50:24 [[32mINFO[0m] [logger.go:199] Database connection established
+2025-11-16 21:50:24 [[32mINFO[0m] [logger.go:199] Database migrations completed
+2025-11-16 21:50:24 [[32mINFO[0m] [logger.go:199] Repositories initialized
+2025-11-16 21:50:24 [[32mINFO[0m] [logger.go:199] Services initialized
+2025-11-16 21:50:24 [[32mINFO[0m] [logger.go:199] API facade initialized
+2025-11-16 21:51:12 [[32mINFO[0m] [logger.go:199] Application starting...
+2025-11-16 21:51:12 [[32mINFO[0m] [logger.go:199] Database connection established
+2025-11-16 21:51:12 [[32mINFO[0m] [logger.go:199] Database migrations completed
+2025-11-16 21:51:12 [[32mINFO[0m] [logger.go:199] Repositories initialized
+2025-11-16 21:51:12 [[32mINFO[0m] [logger.go:199] Services initialized
+2025-11-16 21:51:12 [[32mINFO[0m] [logger.go:199] API facade initialized
+2025-11-16 21:51:12 [[32mINFO[0m] [logger.go:199] Routes registered
+2025-11-16 21:51:12 [[32mINFO[0m] [logger.go:199] Server started successfully on http://localhost:8080
+2025-11-16 21:51:12 [[32mINFO[0m] [logger.go:199] Server starting on port 8080
+2025-11-16 21:51:19 [[32mINFO[0m] [logger.go:176] GET / - [32m200[0m - 1.5525ms
+2025-11-16 21:51:19 [[32mINFO[0m] [logger.go:176] GET /static/css/style.css - [33m304[0m - 0s
+2025-11-16 21:51:19 [[32mINFO[0m] [logger.go:176] GET /static/js/main.js - [33m304[0m - 0s
+2025-11-16 21:51:21 [[32mINFO[0m] [logger.go:176] GET / - [32m200[0m - 504.1µs
+2025-11-16 21:51:21 [[32mINFO[0m] [logger.go:176] GET /login - [32m200[0m - 0s
+2025-11-16 21:51:23 [[32mINFO[0m] [logger.go:176] POST /api/users/login - [32m200[0m - 54.9872ms
+2025-11-16 21:51:23 [[32mINFO[0m] [logger.go:176] GET / - [32m200[0m - 506µs
+2025-11-16 21:51:24 [[32mINFO[0m] [logger.go:176] GET /create-post - [32m200[0m - 0s
+2025-11-16 21:51:26 [[32mINFO[0m] [logger.go:176] POST /logout - [33m303[0m - 0s
+2025-11-16 21:51:26 [[32mINFO[0m] [logger.go:176] GET / - [32m200[0m - 504.9µs
+2025-11-16 21:51:33 [[32mINFO[0m] [logger.go:199] Server shutting down...
+2025-11-16 21:51:33 [[32mINFO[0m] [logger.go:199] Server stopped
+2025-11-16 21:54:11 [[32mINFO[0m] [logger.go:199] Application starting...
+2025-11-16 21:54:11 [[32mINFO[0m] [logger.go:199] Database connection established
+2025-11-16 21:54:11 [[32mINFO[0m] [logger.go:199] Database migrations completed
+2025-11-16 21:54:11 [[32mINFO[0m] [logger.go:199] Repositories initialized
+2025-11-16 21:54:11 [[32mINFO[0m] [logger.go:199] Services initialized
+2025-11-16 21:54:11 [[32mINFO[0m] [logger.go:199] API facade initialized
+2025-11-16 21:54:11 [[32mINFO[0m] [logger.go:199] Routes registered
+2025-11-16 21:54:11 [[32mINFO[0m] [logger.go:199] Server started successfully on http://localhost:8080
+2025-11-16 21:54:11 [[32mINFO[0m] [logger.go:199] Server starting on port 8080
+2025-11-16 21:54:14 [[32mINFO[0m] [logger.go:199] Server shutting down...
+2025-11-16 21:54:14 [[32mINFO[0m] [logger.go:199] Server stopped

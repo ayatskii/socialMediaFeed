@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"socialmediafeed/internal/hashtag"
+	"socialmediafeed/pkg/responce"
 	"strconv"
 	"text/template"
 )
@@ -44,77 +45,58 @@ func (h *Handler) CreatePost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid request payload"})
+		response.BadRequest(w, "Invalid request payload")
 		return
 	}
 
 	if req.Content == "" {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Content is required"})
+		response.BadRequest(w, "Content is required")
 		return
 	}
 
 	userID := getUserIDFromContext(r.Context())
 	if userID == 0 {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusUnauthorized)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Unauthorized"})
+		response.Unauthorized(w, "Unauthorized")
 		return
 	}
 
 	post, err := h.service.CreatePost(r.Context(), userID, req.Content, req.ImageURL)
 	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		response.BadRequest(w, err.Error())
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(post)
+	response.Created(w, post)
 }
 
 func (h *Handler) GetPostByID(w http.ResponseWriter, r *http.Request) {
 	idStr := r.PathValue("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid post ID"})
+		response.BadRequest(w, "Invalid post ID")
 		return
 	}
 
 	post, err := h.service.GetPostByID(r.Context(), id)
 	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusNotFound)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Post not found"})
+		response.NotFound(w, "Post not found")
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(post)
+	response.JSON(w, http.StatusOK, post)
 }
 
 func (h *Handler) UpdatePost(w http.ResponseWriter, r *http.Request) {
 	idStr := r.PathValue("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid post ID"})
+		response.BadRequest(w, "Invalid post ID")
 		return
 	}
 
 	userID := getUserIDFromContext(r.Context())
 	if userID == 0 {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusUnauthorized)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Unauthorized"})
+		response.Unauthorized(w, "Unauthorized")
 		return
 	}
 
@@ -124,52 +106,41 @@ func (h *Handler) UpdatePost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid request payload"})
+		response.BadRequest(w, "Invalid request payload")
 		return
 	}
 
 	userRole := getUserRoleFromContext(r.Context())
 	post, err := h.service.UpdatePost(r.Context(), id, userID, req.Content, req.ImageURL, userRole)
 	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		response.BadRequest(w, err.Error())
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(post)
+	response.JSON(w, http.StatusOK, post)
 }
 
 func (h *Handler) DeletePost(w http.ResponseWriter, r *http.Request) {
 	idStr := r.PathValue("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid post ID"})
+		response.BadRequest(w, "Invalid post ID")
 		return
 	}
 
 	userID := getUserIDFromContext(r.Context())
 	if userID == 0 {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusUnauthorized)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Unauthorized"})
+		response.Unauthorized(w, "Unauthorized")
 		return
 	}
 
 	userRole := getUserRoleFromContext(r.Context())
 	if err := h.service.DeletePost(r.Context(), id, userID, userRole); err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusForbidden)
-		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		response.Forbidden(w, err.Error())
 		return
 	}
 
-	w.WriteHeader(http.StatusNoContent)
+	response.NoContent(w)
 }
 
 func (h *Handler) GetAllPosts(w http.ResponseWriter, r *http.Request) {
@@ -188,14 +159,11 @@ func (h *Handler) GetAllPosts(w http.ResponseWriter, r *http.Request) {
 
 	posts, err := h.service.GetAllPosts(r.Context(), limit, offset)
 	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		response.InternalServerError(w, err.Error())
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(posts)
+	response.JSON(w, http.StatusOK, posts)
 }
 
 func (h *Handler) GetFeed(w http.ResponseWriter, r *http.Request) {
@@ -218,14 +186,11 @@ func (h *Handler) GetFeed(w http.ResponseWriter, r *http.Request) {
 
 	posts, err := h.service.GetFeed(r.Context(), sortBy, limit, offset)
 	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		response.InternalServerError(w, err.Error())
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(posts)
+	response.JSON(w, http.StatusOK, posts)
 }
 
 func (h *Handler) GetTrending(w http.ResponseWriter, r *http.Request) {
@@ -237,23 +202,18 @@ func (h *Handler) GetTrending(w http.ResponseWriter, r *http.Request) {
 
 	posts, err := h.service.GetTrendingPosts(r.Context(), limit)
 	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		response.InternalServerError(w, err.Error())
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(posts)
+	response.JSON(w, http.StatusOK, posts)
 }
 
 func (h *Handler) GetPostsByAuthor(w http.ResponseWriter, r *http.Request) {
 	authorIDStr := r.PathValue("authorId")
 	authorID, err := strconv.ParseInt(authorIDStr, 10, 64)
 	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid author ID"})
+		response.BadRequest(w, "Invalid author ID")
 		return
 	}
 
@@ -271,14 +231,11 @@ func (h *Handler) GetPostsByAuthor(w http.ResponseWriter, r *http.Request) {
 
 	posts, err := h.service.GetPostsByAuthor(r.Context(), authorID, limit, offset)
 	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		response.InternalServerError(w, err.Error())
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(posts)
+	response.JSON(w, http.StatusOK, posts)
 }
 
 func (h *Handler) GetPostsByHashtag(w http.ResponseWriter, r *http.Request) {
@@ -302,89 +259,70 @@ func (h *Handler) GetPostsByHashtag(w http.ResponseWriter, r *http.Request) {
 
 	posts, err := h.service.GetPostsByHashtag(r.Context(), hashtagObj, limit, offset)
 	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		response.InternalServerError(w, err.Error())
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(posts)
+	response.JSON(w, http.StatusOK, posts)
 }
 
 func (h *Handler) LikePost(w http.ResponseWriter, r *http.Request) {
 	userID := getUserIDFromContext(r.Context())
 	if userID == 0 {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusUnauthorized)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Unauthorized"})
+		response.Unauthorized(w, "Unauthorized")
 		return
 	}
 
 	idStr := r.PathValue("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid post ID"})
+		response.BadRequest(w, "Invalid post ID")
 		return
 	}
 
 	if err := h.service.LikePost(r.Context(), userID, id); err != nil {
-		w.Header().Set("Content-Type", "application/json")
 		if err.Error() == "you have already liked this post" {
-			w.WriteHeader(http.StatusBadRequest)
+			response.BadRequest(w, err.Error())
 		} else {
-			w.WriteHeader(http.StatusInternalServerError)
+			response.InternalServerError(w, err.Error())
 		}
-		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]string{"message": "Post liked successfully"})
+	response.Success(w, "Post liked successfully")
 }
 
 func (h *Handler) DislikePost(w http.ResponseWriter, r *http.Request) {
 	userID := getUserIDFromContext(r.Context())
 	if userID == 0 {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusUnauthorized)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Unauthorized"})
+		response.Unauthorized(w, "Unauthorized")
 		return
 	}
 
 	idStr := r.PathValue("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid post ID"})
+		response.BadRequest(w, "Invalid post ID")
 		return
 	}
 
 	if err := h.service.DislikePost(r.Context(), userID, id); err != nil {
-		w.Header().Set("Content-Type", "application/json")
 		if err.Error() == "you have already disliked this post" {
-			w.WriteHeader(http.StatusBadRequest)
+			response.BadRequest(w, err.Error())
 		} else {
-			w.WriteHeader(http.StatusInternalServerError)
+			response.InternalServerError(w, err.Error())
 		}
-		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]string{"message": "Post disliked successfully"})
+	response.Success(w, "Post disliked successfully")
 }
 
 func (h *Handler) ApplyFilters(w http.ResponseWriter, r *http.Request) {
 	idStr := r.PathValue("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid post ID"})
+		response.BadRequest(w, "Invalid post ID")
 		return
 	}
 
@@ -393,26 +331,20 @@ func (h *Handler) ApplyFilters(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid request payload"})
+		response.BadRequest(w, "Invalid request payload")
 		return
 	}
 
 	post, err := h.service.ApplyFilters(r.Context(), id, req.Filters)
 	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusNotFound)
-		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		response.NotFound(w, err.Error())
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(post)
+	response.JSON(w, http.StatusOK, post)
 }
 
 func getUserIDFromContext(ctx context.Context) int64 {
-	// Try string key (set by web auth middleware for backward compatibility)
 	if userID, ok := ctx.Value("userID").(int64); ok {
 		return userID
 	}
@@ -420,7 +352,6 @@ func getUserIDFromContext(ctx context.Context) int64 {
 }
 
 func getUserRoleFromContext(ctx context.Context) string {
-	// Try string key (set by web auth middleware for backward compatibility)
 	if role, ok := ctx.Value("role").(string); ok {
 		return role
 	}
