@@ -14,6 +14,7 @@ func RunMigrations(db *sql.DB) error {
 		createCommentsTable,
 		createNotificationsTable,
 		createFollowersTable,
+		createPostReactionsTable,
 		createIndexes,
 	}
 
@@ -106,6 +107,17 @@ CREATE TABLE IF NOT EXISTS followers (
     FOREIGN KEY (following_id) REFERENCES users(id) ON DELETE CASCADE
 );`
 
+const createPostReactionsTable = `
+CREATE TABLE IF NOT EXISTS post_reactions (
+    user_id INTEGER NOT NULL,
+    post_id INTEGER NOT NULL,
+    reaction_type TEXT NOT NULL CHECK(reaction_type IN ('like', 'dislike')),
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (user_id, post_id),
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE
+);`
+
 const createIndexes = `
 CREATE INDEX IF NOT EXISTS idx_posts_author ON posts(author_id);
 CREATE INDEX IF NOT EXISTS idx_posts_created ON posts(created_at DESC);
@@ -114,4 +126,6 @@ CREATE INDEX IF NOT EXISTS idx_comments_post ON comments(post_id);
 CREATE INDEX IF NOT EXISTS idx_comments_user ON comments(user_id);
 CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications(user_id);
 CREATE INDEX IF NOT EXISTS idx_notifications_user_read ON notifications(user_id, is_read);
+CREATE INDEX IF NOT EXISTS idx_post_reactions_user ON post_reactions(user_id);
+CREATE INDEX IF NOT EXISTS idx_post_reactions_post ON post_reactions(post_id);
 `

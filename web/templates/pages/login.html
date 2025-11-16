@@ -1,0 +1,127 @@
+{{define "pages/login.html"}}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{.Title}} - Social Media Feed</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    {{template "layout/header.html" .}}
+    <main>
+        <div class="container">
+            <div class="auth-container">
+                <div class="auth-card">
+                    <h1>Login</h1>
+                    {{if .Error}}
+                        <div class="error-message" id="serverError">{{.Error}}</div>
+                    {{else}}
+                        <div class="error-message" id="serverError" style="display: none;"></div>
+                    {{end}}
+                    {{if .Success}}
+                        <div class="success-message" id="serverSuccess">{{.Success}}</div>
+                    {{else}}
+                        <div class="success-message" id="serverSuccess" style="display: none;"></div>
+                    {{end}}
+                    <form id="loginForm" method="POST" action="/api/users/login">
+                        <div class="form-group">
+                            <label for="email">Email</label>
+                            <input type="email" id="email" name="email" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="password">Password</label>
+                            <input type="password" id="password" name="password" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Login</button>
+                    </form>
+                    <p class="auth-link">
+                        Don't have an account? <a href="/register">Register here</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </main>
+    <script src="/static/js/main.js"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const loginForm = document.getElementById('loginForm');
+        if (!loginForm) {
+            console.error('Login form not found');
+            return;
+        }
+        
+        loginForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const errorDiv = document.getElementById('serverError') || document.querySelector('.error-message');
+            const successDiv = document.getElementById('serverSuccess') || document.querySelector('.success-message');
+            if (errorDiv) {
+                errorDiv.style.display = 'none';
+                errorDiv.textContent = '';
+            }
+            if (successDiv) {
+                successDiv.style.display = 'none';
+                successDiv.textContent = '';
+            }
+            
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            
+            if (!email || !password) {
+                showError('Please fill in all fields');
+                return;
+            }
+            
+            const formData = {
+                email: email,
+                password: password
+            };
+            
+            try {
+                const response = await fetch('/api/users/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    if (data.token) {
+                        localStorage.setItem('token', data.token);
+                    }
+                    if (data.user) {
+                        localStorage.setItem('user', JSON.stringify(data.user));
+                    }
+                    window.location.href = '/';
+                } else {
+                    showError(data.error || 'Login failed. Please check your credentials.');
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                showError('An error occurred. Please try again.');
+            }
+        });
+        
+        function showError(message) {
+            let errorDiv = document.getElementById('serverError') || document.querySelector('.error-message');
+            if (!errorDiv) {
+                errorDiv = document.createElement('div');
+                errorDiv.className = 'error-message';
+                errorDiv.id = 'serverError';
+                const form = document.getElementById('loginForm');
+                form.parentNode.insertBefore(errorDiv, form);
+            }
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            
+            errorDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+    });
+    </script>
+</body>
+</html>
+{{end}}

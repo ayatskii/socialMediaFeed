@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"socialmediafeed/internal/hashtag"
 	"socialmediafeed/internal/post"
 	"strings"
@@ -297,4 +298,63 @@ func (r *PostRepositoryImpl) FindWithPagination(ctx context.Context, limit, offs
 	}
 
 	return posts, nil
+}
+
+func (r *PostRepositoryImpl) HasUserReacted(ctx context.Context, userID, postID int64) (bool, string, error) {
+	query := `SELECT reaction_type FROM post_reactions WHERE user_id = ? AND post_id = ?`
+	var reactionType string
+	err := r.db.QueryRowContext(ctx, query, userID, postID).Scan(&reactionType)
+	if err == sql.ErrNoRows {
+		return false, "", nil
+	}
+	if err != nil {
+		return false, "", err
+	}
+	return true, reactionType, nil
+}
+
+func (r *PostRepositoryImpl) AddReaction(ctx context.Context, userID, postID int64, reactionType string) error {
+	query := `INSERT INTO post_reactions (user_id, post_id, reaction_type) VALUES (?, ?, ?)`
+	_, err := r.db.ExecContext(ctx, query, userID, postID, reactionType)
+	return err
+}
+
+func (r *PostRepositoryImpl) UpdateReaction(ctx context.Context, userID, postID int64, oldType, newType string) error {
+	query := `UPDATE post_reactions SET reaction_type = ? WHERE user_id = ? AND post_id = ?`
+	_, err := r.db.ExecContext(ctx, query, newType, userID, postID)
+	return err
+}
+
+func (r *PostRepositoryImpl) GetUserReactions(ctx context.Context, userID int64, postIDs []int64) (map[int64]string, error) {
+	if len(postIDs) == 0 {
+		return make(map[int64]string), nil
+	}
+
+	placeholders := make([]string, len(postIDs))
+	args := make([]interface{}, len(postIDs)+1)
+	args[0] = userID
+	for i, id := range postIDs {
+		placeholders[i] = "?"
+		args[i+1] = id
+	}
+
+	query := fmt.Sprintf(`SELECT post_id, reaction_type FROM post_reactions WHERE user_id = ? AND post_id IN (%s)`, strings.Join(placeholders, ","))
+
+	rows, err := r.db.QueryContext(ctx, query, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	reactions := make(map[int64]string)
+	for rows.Next() {
+		var postID int64
+		var reactionType string
+		if err := rows.Scan(&postID, &reactionType); err != nil {
+			return nil, err
+		}
+		reactions[postID] = reactionType
+	}
+
+	return reactions, nil
 }

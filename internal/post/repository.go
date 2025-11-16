@@ -18,4 +18,8 @@ type PostRepository interface {
 	IncrementDislikes(ctx context.Context, post int64) error
 	DecrementDislikes(ctx context.Context, post int64) error
 	FindWithPagination(ctx context.Context, limit, offset int) ([]*Post, error)
+	HasUserReacted(ctx context.Context, userID, postID int64) (bool, string, error)
+	AddReaction(ctx context.Context, userID, postID int64, reactionType string) error
+	UpdateReaction(ctx context.Context, userID, postID int64, oldType, newType string) error
+	GetUserReactions(ctx context.Context, userID int64, postIDs []int64) (map[int64]string, error)
 }

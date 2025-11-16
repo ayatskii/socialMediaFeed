@@ -1,0 +1,23 @@
+<header>
+    <nav>
+        <div class="nav-container">
+            <a href="/" class="logo">Social Media Feed</a>
+            <ul class="nav-links">
+                <li><a href="/">Home</a></li>
+                {{if .CurrentUser}}
+                    <li><a href="/create-post">Create Post</a></li>
+                    <li><a href="/profile/{{.CurrentUser.ID}}">My Profile</a></li>
+                    <li>
+                        <form method="POST" action="/logout" style="display: inline;">
+                            <button type="submit" class="btn-link">Logout</button>
+                        </form>
+                    </li>
+                {{else}}
+                    <li><a href="/login">Login</a></li>
+                    <li><a href="/register">Register</a></li>
+                {{end}}
+            </ul>
+        </div>
+    </nav>
+</header>
+

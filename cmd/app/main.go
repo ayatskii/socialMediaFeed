@@ -20,11 +20,11 @@ import (
 	"socialmediafeed/internal/notification"
 	"socialmediafeed/internal/post"
 	"socialmediafeed/internal/user"
+	"socialmediafeed/internal/web"
 	"socialmediafeed/pkg/logger"
 )
 
 func main() {
-	// Initialize logger
 	logLevel := logger.ParseLevel(getEnv("LOG_LEVEL", "INFO"))
 	log, err := logger.NewWithFile("logs/app.log", logLevel, true)
 	if err != nil {
@@ -35,10 +35,8 @@ func main() {
 	logger.SetDefaultLogger(log)
 	logger.Info("Application starting...")
 
-	// Initialize database
 	dbPath := getEnv("DB_PATH", "data/app.db")
 
-	// Create data directory if it doesn't exist
 	dbDir := filepath.Dir(dbPath)
 	if err := os.MkdirAll(dbDir, 0755); err != nil {
 		logger.Fatal("Failed to create database directory: %v", err)
@@ -50,19 +48,16 @@ func main() {
 	}
 	defer db.Close()
 
-	// Test database connection
 	if err := db.Ping(); err != nil {
 		logger.Fatal("Failed to ping database: %v", err)
 	}
 	logger.Info("Database connection established")
 
-	// Run migrations
 	if err := database.RunMigrations(db); err != nil {
 		logger.Fatal("Failed to run migrations: %v", err)
 	}
 	logger.Info("Database migrations completed")
 
-	// Initialize repositories
 	userRepo := repository.NewUserRepository(db)
 	postRepo := repository.NewPostRepository(db)
 	commentRepo := repository.NewCommentRepository(db)
@@ -71,51 +66,61 @@ func main() {
 
 	logger.Info("Repositories initialized")
 
-	// Initialize services
 	userService := user.NewService(userRepo)
 	postService := post.NewService(postRepo)
 	commentService := comment.NewService(commentRepo)
 	hashtagService := hashtag.NewService(hashtagRepo)
 	notificationService := notification.NewService(notificationRepo)
 
-	// Register observers for notifications
 	logObserver := notification.NewLogObserver()
 	notificationService.RegisterObserver(logObserver)
 
 	logger.Info("Services initialized")
 
-	// Initialize handlers
 	userHandler := user.NewHandler(userService)
 	postHandler := post.NewHandler(postService)
 	commentHandler := comment.NewHandler(commentService)
 	hashtagHandler := hashtag.NewHandler(hashtagService)
 	notificationHandler := notification.NewHandler(notificationService)
+	webHandler := web.NewHandler(postService, userService)
+	authMiddleware := web.NewAuthMiddleware(userService)
 
 	logger.Info("Handlers initialized")
 
-	// Setup routes
 	mux := http.NewServeMux()
 
-	// Health check
 	mux.HandleFunc("GET /health", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"status":"ok"}`))
+		 	w.Write([]byte(`{"status":"ok"}`))
 	})
 
-	// Register all routes
 	userHandler.RegisterRoutes(mux)
-	postHandler.RegisterRoutes(mux)
+	
+	// Register post routes with optional auth for like/dislike
+	mux.HandleFunc("POST /api/posts", postHandler.CreatePost)
+	mux.HandleFunc("GET /api/posts/{id}", postHandler.GetPostByID)
+	mux.HandleFunc("PUT /api/posts/{id}", postHandler.UpdatePost)
+	mux.HandleFunc("DELETE /api/posts/{id}", postHandler.DeletePost)
+	mux.HandleFunc("GET /api/posts", postHandler.GetAllPosts)
+	mux.HandleFunc("GET /api/feed", postHandler.GetFeed)
+	mux.HandleFunc("GET /api/trending", postHandler.GetTrending)
+	mux.HandleFunc("GET /api/users/{authorId}/posts", postHandler.GetPostsByAuthor)
+	mux.HandleFunc("GET /api/hashtags/{tag}/posts", postHandler.GetPostsByHashtag)
+	mux.HandleFunc("POST /api/posts/{id}/like", authMiddleware.OptionalAuth(postHandler.LikePost))
+	mux.HandleFunc("POST /api/posts/{id}/dislike", authMiddleware.OptionalAuth(postHandler.DislikePost))
+	mux.HandleFunc("POST /api/posts/{id}/filters", postHandler.ApplyFilters)
+	
 	commentHandler.RegisterRoutes(mux)
 	hashtagHandler.RegisterRoutes(mux)
 	notificationHandler.RegisterRoutes(mux)
 
+	webHandler.RegisterRoutes(mux)
+
 	logger.Info("Routes registered")
 
-	// Wrap with logging middleware
 	handler := logger.Middleware(log)(mux)
 
-	// Create HTTP server
 	port := getEnv("PORT", "8080")
 	server := &http.Server{
 		Addr:         ":" + port,
@@ -125,7 +130,6 @@ func main() {
 		IdleTimeout:  60 * time.Second,
 	}
 
-	// Start server in goroutine
 	go func() {
 		logger.Info("Server starting on port %s", port)
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
@@ -135,14 +139,12 @@ func main() {
 
 	logger.Info("Server started successfully on http://localhost:%s", port)
 
-	// Wait for interrupt signal to gracefully shutdown the server
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 
 	logger.Info("Server shutting down...")
 
-	// Graceful shutdown with timeout
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 

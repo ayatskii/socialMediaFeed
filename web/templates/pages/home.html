@@ -1,0 +1,42 @@
+{{define "pages/home.html"}}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{.Title}} - Social Media Feed</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    {{template "layout/header.html" .}}
+    <main>
+        <div class="container">
+            <div class="feed-header">
+                <h1>Social Media Feed</h1>
+                {{if .CurrentUser}}
+                    <a href="/create-post" class="btn btn-primary">Create Post</a>
+                {{else}}
+                    <p class="feed-subtitle">Please <a href="/login">login</a> to create posts</p>
+                {{end}}
+            </div>
+            <div class="posts-container">
+                {{if .Posts}}
+                    {{range .Posts}}
+                        {{template "components/post_card.html" .}}
+                    {{end}}
+                {{else}}
+                    <div class="no-posts">
+                        <p>No posts available. Be the first to post!</p>
+                        {{if .CurrentUser}}
+                            <a href="/create-post" class="btn">Create Your First Post</a>
+                        {{end}}
+                    </div>
+                {{end}}
+            </div>
+        </div>
+    </main>
+    <script src="/static/js/main.js"></script>
+</body>
+</html>
+{{end}}
+

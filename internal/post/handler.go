@@ -313,6 +313,14 @@ func (h *Handler) GetPostsByHashtag(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) LikePost(w http.ResponseWriter, r *http.Request) {
+	userID := getUserIDFromContext(r.Context())
+	if userID == 0 {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusUnauthorized)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Unauthorized"})
+		return
+	}
+
 	idStr := r.PathValue("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
@@ -322,9 +330,13 @@ func (h *Handler) LikePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.service.LikePost(r.Context(), id); err != nil {
+	if err := h.service.LikePost(r.Context(), userID, id); err != nil {
 		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusInternalServerError)
+		if err.Error() == "you have already liked this post" {
+			w.WriteHeader(http.StatusBadRequest)
+		} else {
+			w.WriteHeader(http.StatusInternalServerError)
+		}
 		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
 		return
 	}
@@ -334,6 +346,14 @@ func (h *Handler) LikePost(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) DislikePost(w http.ResponseWriter, r *http.Request) {
+	userID := getUserIDFromContext(r.Context())
+	if userID == 0 {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusUnauthorized)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Unauthorized"})
+		return
+	}
+
 	idStr := r.PathValue("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
@@ -343,9 +363,13 @@ func (h *Handler) DislikePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.service.DislikePost(r.Context(), id); err != nil {
+	if err := h.service.DislikePost(r.Context(), userID, id); err != nil {
 		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusInternalServerError)
+		if err.Error() == "you have already disliked this post" {
+			w.WriteHeader(http.StatusBadRequest)
+		} else {
+			w.WriteHeader(http.StatusInternalServerError)
+		}
 		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
 		return
 	}
@@ -388,6 +412,7 @@ func (h *Handler) ApplyFilters(w http.ResponseWriter, r *http.Request) {
 }
 
 func getUserIDFromContext(ctx context.Context) int64 {
+	// Try string key (set by web auth middleware for backward compatibility)
 	if userID, ok := ctx.Value("userID").(int64); ok {
 		return userID
 	}
@@ -395,6 +420,7 @@ func getUserIDFromContext(ctx context.Context) int64 {
 }
 
 func getUserRoleFromContext(ctx context.Context) string {
+	// Try string key (set by web auth middleware for backward compatibility)
 	if role, ok := ctx.Value("role").(string); ok {
 		return role
 	}

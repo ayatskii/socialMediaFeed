@@ -1,0 +1,34 @@
+<div class="post-card">
+    <div class="post-header">
+        <h3><a href="/post/{{.ID}}">Post #{{.ID}}</a></h3>
+        <p class="post-meta">
+            Author ID: <a href="/profile/{{.AuthorID}}">{{.AuthorID}}</a> | 
+            {{.CreatedAt.Format "2006-01-02 15:04:05"}}
+        </p>
+    </div>
+    <div class="post-content">
+        <p>{{.Content}}</p>
+        {{if .MediaURL}}
+            <img src="{{.MediaURL}}" alt="Post media" class="post-media">
+        {{end}}
+    </div>
+    <div class="post-stats">
+        <button class="btn-like" data-post-id="{{.ID}}" onclick="likePost({{.ID}})">
+            👍 <span class="like-count">{{.Likes}}</span>
+        </button>
+        <button class="btn-dislike" data-post-id="{{.ID}}" onclick="dislikePost({{.ID}})">
+            👎 <span class="dislike-count">{{.Dislikes}}</span>
+        </button>
+    </div>
+    {{if .Hashtags}}
+        <div class="hashtags">
+            {{range .Hashtags}}
+                <span class="hashtag">#{{.}}</span>
+            {{end}}
+        </div>
+    {{end}}
+    <div class="post-actions">
+        <a href="/post/{{.ID}}" class="btn btn-small">View Post</a>
+    </div>
+</div>
+
