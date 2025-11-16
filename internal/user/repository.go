@@ -11,7 +11,7 @@ type Repository interface {
 	Update(ctx context.Context, user *User) error
 	Delete(ctx context.Context, id int64) error
 	Exists(ctx context.Context, email string) (bool, error)
-	CountUsers(ctx context.Context) (int64, error)
+	CountUsers(ctx context.Context) (int, error)
 	FindWithPagination(ctx context.Context, limit, offset int) ([]User, error)
 	SearchByUsername(ctx context.Context, query string) ([]User, error)
 	Ban(ctx context.Context, userID int64) error

@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"socialmediafeed/internal/api"
-	"socialmediafeed/internal/hashtag"
 	"strings"
 	"time"
 )
@@ -20,11 +19,11 @@ type Post struct {
 	UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
 	Likes     int       `json:"likes" db:"likes"`
 	Dislikes  int       `json:"dislike" db:"dislikes"`
-	Hashtags  []*hashtag.Hashtag
+	Hashtags  []string
 }
 
 func NewPost(author int64, content, mediaUrl string) *Post {
-	hashtags := make([]*hashtag.Hashtag, 0)
+	hashtags := make([]string, 0)
 	return &Post{
 		AuthorID:  author,
 		Content:   content,
@@ -76,7 +75,7 @@ func (p *Post) HasHashtags() bool {
 
 func (p *Post) Clone() *Post {
 	clone := *p
-	clone.Hashtags = make([]*hashtag.Hashtag, len(p.Hashtags))
+	clone.Hashtags = make([]string, len(p.Hashtags))
 	copy(clone.Hashtags, p.Hashtags)
 	return &clone
 }
