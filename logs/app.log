@@ -1,0 +1,27 @@
+2025-11-16 18:34:26 [[32mINFO[0m] [logger.go:199] Application starting...
+2025-11-16 18:34:26 [[35mFATAL[0m] [logger.go:211] Failed to ping database: unable to open database file: The system cannot find the path specified.
+2025-11-16 18:40:07 [[32mINFO[0m] [logger.go:199] Application starting...
+2025-11-16 18:40:07 [[32mINFO[0m] [logger.go:199] Database connection established
+2025-11-16 18:40:07 [[32mINFO[0m] [logger.go:199] Database migrations completed
+2025-11-16 18:40:07 [[32mINFO[0m] [logger.go:199] Repositories initialized
+2025-11-16 18:40:07 [[32mINFO[0m] [logger.go:199] Services initialized
+2025-11-16 18:40:07 [[32mINFO[0m] [logger.go:199] Handlers initialized
+2025-11-16 18:46:52 [[32mINFO[0m] [logger.go:199] Application starting...
+2025-11-16 18:46:52 [[32mINFO[0m] [logger.go:199] Database connection established
+2025-11-16 18:46:52 [[32mINFO[0m] [logger.go:199] Database migrations completed
+2025-11-16 18:46:52 [[32mINFO[0m] [logger.go:199] Repositories initialized
+2025-11-16 18:46:52 [[32mINFO[0m] [logger.go:199] Services initialized
+2025-11-16 18:46:52 [[32mINFO[0m] [logger.go:199] Handlers initialized
+2025-11-16 18:46:52 [[32mINFO[0m] [logger.go:199] Routes registered
+2025-11-16 18:46:52 [[32mINFO[0m] [logger.go:199] Server started successfully on http://localhost:8080
+2025-11-16 18:46:52 [[32mINFO[0m] [logger.go:199] Server starting on port 8080
+2025-11-16 18:46:57 [[32mINFO[0m] [logger.go:176] GET / - [31m404[0m - 0s
+2025-11-16 18:46:57 [[32mINFO[0m] [logger.go:176] GET /favicon.ico - [31m404[0m - 0s
+2025-11-16 18:47:02 [[32mINFO[0m] [logger.go:176] GET /posts - [31m404[0m - 0s
+2025-11-16 18:47:05 [[32mINFO[0m] [logger.go:176] GET /users - [31m404[0m - 0s
+2025-11-16 18:47:08 [[32mINFO[0m] [logger.go:176] GET /register - [31m404[0m - 0s
+2025-11-16 18:47:16 [[32mINFO[0m] [logger.go:176] GET /api/users/register - [31m400[0m - 0s
+2025-11-16 18:47:16 [[32mINFO[0m] [logger.go:176] GET /favicon.ico - [31m404[0m - 0s
+2025-11-16 18:47:21 [[32mINFO[0m] [logger.go:176] GET /api/users/login - [31m400[0m - 0s
+2025-11-16 18:47:28 [[32mINFO[0m] [logger.go:199] Server shutting down...
+2025-11-16 18:47:28 [[32mINFO[0m] [logger.go:199] Server stopped
