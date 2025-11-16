@@ -6,7 +6,7 @@ import (
 )
 
 type Notification struct {
-	ID         int
+	ID         int64
 	User       *user.User
 	Type       string
 	Content    string
