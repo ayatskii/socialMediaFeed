@@ -1,0 +1,57 @@
+CREATE TABLE IF NOT EXISTS users(
+    id INTEGER PRIMARY KET AUTOINCREMENT,
+    username TEXT NOT NULL UNIQUE,
+    email TEXT NOT NULL UNIQUE,
+    password_hash TEXT NOT NULL,
+    role TEXT NOT NULL DEFAULT 'user',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS posts (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    author_id INTEGER NOT NULL,
+    content TEXT NOT NULL,
+    media_url TEXT,
+    likes INTEGER DEFAULT 0,
+    dislikes INTEGER DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (author_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS hashtags (
+    post_id INTEGER NOT NULL,
+    tag TEXT NOT NULL UNIQUE,
+    usage_count INTEGER DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS post_hashtags (
+    post_id INTEGER NOT NULL,
+    hashtag_id INTEGER NOT NULL,
+    PRIMARY KEY (post_id, hashtag_id),
+    FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
+    FOREIGN KEY (hashtag_id) REFERENCES hashtags(id) ON DELETE CASCADE
+);
+
+
+CREATE TABLE IF NOT EXISTS comments(
+    id INTEGER NOT NULL AUTOINCREMENT,
+    author_id INTEGER NOT NULL,
+    text TEXT,
+    FOREIGN KEY (author_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS comments (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    post_id INTEGER NOT NULL,
+    user_id INTEGER NOT NULL,
+    content TEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_comments_post ON comments(post_id);
+CREATE INDEX IF NOT EXISTS idx_comments_user ON comments(user_id);

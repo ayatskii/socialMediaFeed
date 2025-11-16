@@ -8,21 +8,21 @@ import (
 )
 
 type Post struct {
-	ID        string     `json:"id"`
-	Author    *user.User `json:"author"`
-	Content   string     `json:"content"`
-	MediaURL  string     `json:"mediaURL,omitempty"`
-	CreatedAt time.Time  `json:"createdAt"`
-	Likes     int        `json:"likes"`
-	Comments  []string   `json:"comments"`
+	ID        string
+	Author    *user.User
+	Content   string
+	MediaURL  string
+	CreatedAt time.Time
+	Likes     int
+	Dislikes  int
 }
 
 func (p *Post) ToFeedItem() api.FeedItem {
 	return api.FeedItem{
 		Type:    "Internal",
-		Author:  fmt.Sprintf("%s (%s)", p.Author.Name, p.Author.Role),
+		Author:  fmt.Sprintf("%s (%s)", p.Author.Username, p.Author.Role),
 		Content: p.Content,
-		Metrics: fmt.Sprintf("Likes: %d, Comments: %d", p.Likes, len(p.Comments)),
+		Metrics: fmt.Sprintf("Likes: %d, Comments: %d", p.Likes),
 		PostID:  p.ID,
 	}
 }
